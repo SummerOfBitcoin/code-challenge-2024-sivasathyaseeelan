@@ -1,6 +1,5 @@
 import hashlib
 from hashlib import sha256
-from Crypto.Hash import RIPEMD160
 from math import log
 import json
 
@@ -12,7 +11,8 @@ def hash256(s):
 
 
 def hash160(s):
-    return RIPEMD160.new(sha256(s).digest()).digest()
+    ripemd160 = hashlib.new("ripemd160")
+    return ripemd160.update(sha256(s).digest())
 
 
 def byte_size(string):
