@@ -25,7 +25,7 @@ class BlockHeader:
                 hash256(
                     int_to_little_endian(self.version, 4)
                     + bytes.fromhex(self.prevBlockHash)[::-1]
-                    + bytes.fromhex(self.merkleRoot)
+                    + bytes.fromhex(self.merkleRoot)[::-1]
                     + int_to_little_endian(self.timestamp, 4)
                     + self.bits
                     + int_to_little_endian(self.nonce, 4)
@@ -53,7 +53,7 @@ class BlockHeader:
         blockheader += byte_size_to_little_endian(bytes.fromhex(self.prevBlockHash)).hex() 
         blockheader += byte_size_to_little_endian(bytes.fromhex(self.merkleRoot)).hex() 
         blockheader += int_to_little_endian(self.timestamp, 4).hex()
-        blockheader += byte_size_to_little_endian(bytes.fromhex(self.bits)).hex() 
+        blockheader += self.bits
         blockheader += int_to_little_endian(self.nonce, 4).hex()
 
         return blockheader
