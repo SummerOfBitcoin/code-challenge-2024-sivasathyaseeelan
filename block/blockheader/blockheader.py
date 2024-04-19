@@ -25,9 +25,9 @@ class BlockHeader:
             hash_in = ""
             hash_in += int_to_little_endian(self.version, 4).hex()
             hash_in += bytes.fromhex(self.prevBlockHash)[::-1].hex()
-            hash_in += bytes.fromhex(self.merkleRoot)[::-1].hex()
+            hash_in += self.merkleRoot
             hash_in += int_to_little_endian(self.timestamp, 4).hex()
-            hash_in += self.bits[::-1].hex()
+            hash_in += self.bits.hex()
             hash_in += int_to_little_endian(self.nonce, 4).hex()
 
             self.blockHash = hash256(bytes.fromhex(hash_in))[::-1].hex()
@@ -37,7 +37,7 @@ class BlockHeader:
             self.nonce += 1
             print(f"Mining Started {self.nonce}", end="\r")
         self.serialize = hash_in
-        self.bits = self.bits[::-1].hex()
+        self.bits = self.bits.hex()
 
     def to_dict(self):
         return {

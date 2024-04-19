@@ -38,7 +38,7 @@ def addBlock(BlockHeight, prevBlockHash):
     selected_entries.insert(0, utils.utils.hash256(coinbaseTx.serialize()).hex())
 
     merkleRoot_input = selected_entries
-    merkleRoot = bytes.fromhex(utils.utils.merkle_root(merkleRoot_input)).hex()
+    merkleRoot = utils.utils.generateMerkleRoot(merkleRoot_input)
 
     blockheader = BlockHeader(
         VERSION, prevBlockHash, merkleRoot, timestamp, bits
@@ -49,8 +49,10 @@ def addBlock(BlockHeight, prevBlockHash):
     with open("./output.txt", 'w') as file:
         file.write(blockheader_serialize + '\n')
         file.write(coinbase_serialize + '\n')
+        # file.write('[' + '\n')
         for entry in selected_entries:
             file.write(entry + '\n')
+        # file.write(']' + '\n')
 
     return left_weight ,total_fee
     
