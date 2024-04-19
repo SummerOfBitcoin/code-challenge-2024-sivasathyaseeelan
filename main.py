@@ -38,7 +38,7 @@ def addBlock(BlockHeight, prevBlockHash):
     selected_entries.insert(0, utils.utils.hash256(coinbaseTx.serialize()).hex())
 
     merkleRoot_input = selected_entries
-    merkleRoot = bytes.fromhex(utils.utils.merkle_root(merkleRoot_input))[::-1].hex()
+    merkleRoot = bytes.fromhex(utils.utils.merkle_root(merkleRoot_input)).hex()
 
     blockheader = BlockHeader(
         VERSION, prevBlockHash, merkleRoot, timestamp, bits
