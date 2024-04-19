@@ -16,25 +16,28 @@ class BlockHeader:
         self.bits = bits
         self.nonce = 0
         self.blockHash = ""
+        self.serialize = ""
 
     def mine(self, target):
-        self.blockHash = target + 1
+        lower = target + 1
 
-        while self.blockHash > target:
-            self.blockHash = little_endian_to_int(
-                hash256(
-                    int_to_little_endian(self.version, 4)
-                    + bytes.fromhex(self.prevBlockHash)[::-1]
-                    + bytes.fromhex(self.merkleRoot)[::-1]
-                    + int_to_little_endian(self.timestamp, 4)
-                    + self.bits
-                    + int_to_little_endian(self.nonce, 4)
-                )
-            )
+        while lower > target:
+            hash_in = ""
+            hash_in += int_to_little_endian(self.version, 4).hex()
+            hash_in += bytes.fromhex(self.prevBlockHash)[::-1].hex()
+            hash_in += bytes.fromhex(self.merkleRoot)[::-1].hex()
+            hash_in += int_to_little_endian(self.timestamp, 4).hex()
+            hash_in += self.bits[::-1].hex()
+            hash_in += int_to_little_endian(self.nonce, 4).hex()
+
+            self.blockHash = hash256(bytes.fromhex(hash_in))[::-1].hex()
+
+            lower = int(self.blockHash, 16)           
+             
             self.nonce += 1
             print(f"Mining Started {self.nonce}", end="\r")
-        self.blockHash = int_to_little_endian(self.blockHash, 32).hex()[::-1]
-        self.bits = self.bits.hex()
+        self.serialize = hash_in
+        self.bits = self.bits[::-1].hex()
 
     def to_dict(self):
         return {
@@ -47,13 +50,5 @@ class BlockHeader:
             "blockHash": self.blockHash
         }
     
-    def serialize(self):
-        blockheader = ""
-        blockheader += int_to_little_endian(self.version, 4).hex()
-        blockheader += byte_size_to_little_endian(bytes.fromhex(self.prevBlockHash)).hex() 
-        blockheader += byte_size_to_little_endian(bytes.fromhex(self.merkleRoot)).hex() 
-        blockheader += int_to_little_endian(self.timestamp, 4).hex()
-        blockheader += self.bits
-        blockheader += int_to_little_endian(self.nonce, 4).hex()
-
-        return blockheader
+    def Serialize(self):
+        return self.serialize

@@ -20,7 +20,7 @@ MAX_WEIGHT = 4000000
 
 ZERO_HASH = "0" * 64
 VERSION = 1
-INITIAL_TARGET = 0x0000FFFF00000000000000000000000000000000000000000000000000000000
+INITIAL_TARGET = 0x0000ffff00000000000000000000000000000000000000000000000000000000                
 
 
 def addBlock(BlockHeight, prevBlockHash):
@@ -44,7 +44,7 @@ def addBlock(BlockHeight, prevBlockHash):
         VERSION, prevBlockHash, merkleRoot, timestamp, bits
     )
     blockheader.mine(current_target)
-    blockheader_serialize = blockheader.serialize()
+    blockheader_serialize = blockheader.Serialize()
 
     with open("./output.txt", 'w') as file:
         file.write(blockheader_serialize + '\n')
