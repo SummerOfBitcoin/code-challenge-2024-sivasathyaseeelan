@@ -20,7 +20,9 @@ MAX_WEIGHT = 4000000
 
 ZERO_HASH = "0" * 64
 VERSION = 4
-INITIAL_TARGET = 0x0000ffff00000000000000000000000000000000000000000000000000000000                
+INITIAL_TARGET = 0x0000ffff00000000000000000000000000000000000000000000000000000000
+
+WTXID_COINBASE = "0000000000000000000000000000000000000000000000000000000000000000"
 
 
 def addBlock(BlockHeight, prevBlockHash):
@@ -28,16 +30,18 @@ def addBlock(BlockHeight, prevBlockHash):
     bits = utils.utils.target_to_bits(INITIAL_TARGET)
     timestamp = int(time.time())
 
-    coinbaseInstance = CoinbaseTx(BlockHeight)
+
+    left_weight ,total_fee, selected_txids, selected_wtxids = algorithms.knapsack.knapsack_greedy(mempool, MAX_WEIGHT - 320 - 820)
+    selected_wtxids.insert(0, WTXID_COINBASE)
+
+    witness_commitment = utils.utils.calculateWitnessCommitment(selected_wtxids).hex()
+
+    coinbaseInstance = CoinbaseTx(BlockHeight, witness_commitment, total_fee)
     coinbaseTx = coinbaseInstance.CoinbaseTransaction()
-    coinbase_wt = 4*len(coinbaseTx.serialize())
-    left_weight ,total_fee, selected_entries = algorithms.knapsack.knapsack_greedy(mempool, MAX_WEIGHT - 320 - coinbase_wt)
-    coinbaseTx.tx_outs[0].amount = coinbaseTx.tx_outs[0].amount + total_fee
-    coinbase_serialize =  coinbaseTx.serialize().hex()
 
-    selected_entries.insert(0, utils.utils.hash256(coinbaseTx.serialize()).hex())
+    selected_txids.insert(0, utils.utils.hash256(bytes.fromhex(coinbaseTx)).hex())
 
-    merkleRoot_input = selected_entries
+    merkleRoot_input = selected_txids
     merkleRoot = utils.utils.generateMerkleRoot(merkleRoot_input)
 
     blockheader = BlockHeader(
@@ -48,9 +52,9 @@ def addBlock(BlockHeight, prevBlockHash):
 
     with open("./output.txt", 'w') as file:
         file.write(blockheader_serialize + '\n')
-        file.write(coinbase_serialize + '\n')
+        file.write(coinbaseTx+ '\n')
         # file.write('[' + '\n')
-        for entry in selected_entries:
+        for entry in selected_txids:
             file.write(entry + '\n')
         # file.write(']' + '\n')
 
@@ -67,6 +71,14 @@ def isvalid_tx(tx, txid):
 
 def gen_tx_id(tx):
     pre_hash_raw_tx = utils.utils.gen_pre_hash_raw_tx(tx)
+    binary_data = bytes.fromhex(pre_hash_raw_tx)
+    byte_string = utils.utils.hash256(binary_data)
+
+    return utils.utils.byte_size_to_little_endian(byte_string).hex()
+
+
+def gen_wtx_id(tx):
+    pre_hash_raw_tx = utils.utils.gen_pre_hash_raw_wtx(tx)
     binary_data = bytes.fromhex(pre_hash_raw_tx)
     byte_string = utils.utils.hash256(binary_data)
 
@@ -90,10 +102,11 @@ def calculate_tx_weight(tx):
 
 def mempool_entry(tx):
     tx_id = gen_tx_id(tx)
+    wtxid = gen_wtx_id(tx)
     fee = calculate_tx_fee(tx)
     weight = calculate_tx_weight(tx)
 
-    return (tx_id, fee, weight)
+    return (tx_id, wtxid, fee, weight)
 
 
 def read_txs(directory):
@@ -115,10 +128,10 @@ def read_txs(directory):
                 if isvalid_tx(tx, entry[0]):
                     mempool.append(mempool_entry(tx))
                     valid_tx = valid_tx + 1
-                    print(f"{entry[0]} is Verified")
+                    # print(f"{entry[0]} is Verified")
                 else:
                     invalid_tx = invalid_tx + 1
-                    print(f"{entry[0]} is Unverified")
+                    # print(f"{entry[0]} is Unverified")
 
     return valid_tx
     

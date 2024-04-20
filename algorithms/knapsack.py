@@ -40,19 +40,21 @@ def fractional_knapsack(entries, total_weight):
 
 def knapsack_greedy(entries, total_weight):
     # Sort entries by their fee in descending order
-    entries.sort(key=lambda x: x[1] / x[2], reverse=True)
+    entries.sort(key=lambda x: x[2] / x[3], reverse=True)
 
     total_fee = 0
-    selected_entries = []
+    selected_txids = []
+    selected_wtxids = []
 
     for entry in entries:
-        id_, fee, weight = entry
+        id_, wtxid, fee, weight = entry
         if total_weight >= weight:
             total_fee += fee
-            selected_entries.append(id_)
+            selected_txids.append(id_)
+            selected_wtxids.append(wtxid)
             total_weight -= weight
 
-    return total_weight ,total_fee, selected_entries
+    return total_weight ,total_fee, selected_txids, selected_wtxids
 
 def select_transactions(mempool, block_size_limit):
     sorted_transactions = sorted(mempool, key=lambda x: x[1], reverse=True)

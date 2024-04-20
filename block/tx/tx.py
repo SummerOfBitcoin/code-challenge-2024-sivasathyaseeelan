@@ -2,9 +2,11 @@ from utils.utils import (
     int_to_little_endian,
     bytes_needed,
     decode_base58,
+    int_to_compact_size,
     little_endian_to_int,
     encode_varint,
     hash256,
+    byte_size
 )
 from block.script.script import Script
 
@@ -20,27 +22,45 @@ SIGHASH_ALL = 1
 
 
 class CoinbaseTx:
-    def __init__(self, BlockHeight):
+    def __init__(self, BlockHeight, WitnessCommitment, total_fee):
         self.BlockHeightInLittleEndian = int_to_little_endian(
             BlockHeight, bytes_needed(BlockHeight)
         )
+        self.WitnessCommitment =  WitnessCommitment
+        self.total_fee = total_fee
 
     def CoinbaseTransaction(self):
+        serialize = ""
+        serialize += "01000000000101"
+
         prev_tx = ZERO_HASH
         prev_index = 0xFFFFFFFF
-        tx_ins = []
-        tx_ins.append(TxIn(prev_tx, prev_index))
-        tx_ins[0].script_sig.cmds.append(self.BlockHeightInLittleEndian)
 
-        tx_outs = []
-        target_amount = REWARD * 100000000
+        tx_in = TxIn(prev_tx, prev_index)
+        tx_in.script_sig.cmds.append(self.BlockHeightInLittleEndian)
+        serialize += tx_in.serialize().hex()
+        serialize += "02"
+
+        target_amount = REWARD * 100000000 + self.total_fee
+        
         target_h160 = decode_base58(MINER_ADDRESS)
         target_script = Script.p2pkh_script(target_h160)
-        tx_outs.append(TxOut(amount=target_amount, script_pubkey=target_script))
-        coinBaseTx = Tx(1, tx_ins, tx_outs, 0)
-        coinBaseTx.TxId = coinBaseTx.id()
+        txout_0 = TxOut(amount=target_amount, script_pubkey=target_script)
+        serialize += txout_0.serialize().hex()
+        serialize += int_to_little_endian(0, 8).hex()
 
-        return coinBaseTx
+        scriptpubkey_1 = f"6a24aa21a9ed{self.WitnessCommitment}"
+
+        serialize += int_to_compact_size(byte_size(scriptpubkey_1)).hex()
+        serialize += scriptpubkey_1
+
+        serialize += "01200000000000000000000000000000000000000000000000000000000000000000"
+
+        serialize += "00000000"
+
+
+        return serialize
+
 
 
 class Tx:

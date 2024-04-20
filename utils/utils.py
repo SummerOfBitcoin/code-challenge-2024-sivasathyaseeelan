@@ -5,6 +5,7 @@ from math import log
 import json
 
 BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+WITNESS_RESERVED_VALUE = "0000000000000000000000000000000000000000000000000000000000000000"
 
 def hash256(s):
     """Two rounds of SHA256"""
@@ -48,6 +49,31 @@ def gen_pre_hash_raw_tx(tx):
   pre_hash_raw_data += int_to_compact_size(len(tx["vout"])).hex()
   for vout in tx["vout"]:
     pre_hash_raw_data += int_to_little_endian(vout["value"], 8).hex() + int_to_compact_size(byte_size(vout["scriptpubkey"])).hex() + vout["scriptpubkey"]
+  pre_hash_raw_data += int_to_little_endian(tx["locktime"], 4).hex()
+  return pre_hash_raw_data
+
+
+def gen_pre_hash_raw_wtx(tx):
+  if not is_segwit(tx):
+     return gen_pre_hash_raw_tx(tx)
+  pre_hash_raw_data = ""
+  pre_hash_raw_data += int_to_little_endian(tx["version"], 4).hex()
+  pre_hash_raw_data += "0001"
+  pre_hash_raw_data += int_to_compact_size(len(tx["vin"])).hex()
+  for vin in tx["vin"]:
+    pre_hash_raw_data += byte_size_to_little_endian(bytes.fromhex(vin["txid"])).hex() + int_to_little_endian(vin["vout"], 4).hex() + int_to_compact_size(byte_size(vin["scriptsig"])).hex() + vin["scriptsig"] + int_to_little_endian(vin["sequence"], 4).hex()
+  pre_hash_raw_data += int_to_compact_size(len(tx["vout"])).hex()
+  for vout in tx["vout"]:
+    pre_hash_raw_data += int_to_little_endian(vout["value"], 8).hex() + int_to_compact_size(byte_size(vout["scriptpubkey"])).hex() + vout["scriptpubkey"]
+  for vin in tx["vin"]:
+      if "witness" in vin:
+        length = len(vin["witness"])
+      else:
+        length = 0
+      pre_hash_raw_data += int_to_compact_size(length).hex()
+      if length != 0:
+        for wit_item in vin["witness"]:
+          pre_hash_raw_data += int_to_compact_size(byte_size(wit_item)).hex() + wit_item
   pre_hash_raw_data += int_to_little_endian(tx["locktime"], 4).hex()
   return pre_hash_raw_data
 
@@ -106,73 +132,54 @@ compact_size_bytes = int_to_compact_size(integer_value)
 
 json_tx = '''
 {
+  "txid": "0a930f20c108af089e864f6290a3c9b8db6dab092b3a77583b34bb4ff4b35c1e",
   "version": 2,
   "locktime": 0,
   "vin": [
     {
-      "txid": "91841aff383692268b6e6e8dd4db468b193980f06a11a674593ced444c5f092b",
-      "vout": 0,
+      "txid": "fde72ccf63b4320bbd96a4b3fd958bdfe5ee5209bef80e95685e78050a889b08",
+      "vout": 9,
       "prevout": {
-        "scriptpubkey": "5120175d515c35577834ad0689fc3c8846283bf4310b7dcbc62fa41089eca7dec029",
-        "scriptpubkey_asm": "OP_PUSHNUM_1 OP_PUSHBYTES_32 175d515c35577834ad0689fc3c8846283bf4310b7dcbc62fa41089eca7dec029",
+        "scriptpubkey": "512068a6b4092dd7f4ead75ed8a772d41b824919ceb000896346e57f5feeda935672",
+        "scriptpubkey_asm": "OP_PUSHNUM_1 OP_PUSHBYTES_32 68a6b4092dd7f4ead75ed8a772d41b824919ceb000896346e57f5feeda935672",
         "scriptpubkey_type": "v1_p2tr",
-        "scriptpubkey_address": "bc1pzaw4zhp42aurftgx387rezzx9qalgvgt0h9uvtayzzy7ef77cq5s69sjt9",
-        "value": 92137
+        "scriptpubkey_address": "bc1pdzntgzfd6l6w4467mznh94qmsfy3nn4sqzykx3h90a07ak5n2eeq7pae58",
+        "value": 1711
       },
       "scriptsig": "",
       "scriptsig_asm": "",
       "witness": [
-        "7a4368c89eca7fec24a5e427781894ed734ca65930f2765e8ae3e9098ab62e42efbe8a227b149fb51bdc7052233b5af6dde7614d6bf83932b59e54bad76ab89d"
+        "02",
+        "750063036f726401010a746578742f706c61696e00367b2270223a226272632d3230222c226f70223a226d696e74222c227469636b223a2261616161222c22616d74223a223130303030227d6851",
+        "c1782891272861d4104f524ac31855e20aa1bdb507ac4a6619c030768496b90e84"
       ],
       "is_coinbase": false,
-      "sequence": 4294967293
-    },
-    {
-      "txid": "22f443847db662d39d023dea545e115840c307160df0ea19df41cdb39f11c428",
-      "vout": 0,
-      "prevout": {
-        "scriptpubkey": "5120175d515c35577834ad0689fc3c8846283bf4310b7dcbc62fa41089eca7dec029",
-        "scriptpubkey_asm": "OP_PUSHNUM_1 OP_PUSHBYTES_32 175d515c35577834ad0689fc3c8846283bf4310b7dcbc62fa41089eca7dec029",
-        "scriptpubkey_type": "v1_p2tr",
-        "scriptpubkey_address": "bc1pzaw4zhp42aurftgx387rezzx9qalgvgt0h9uvtayzzy7ef77cq5s69sjt9",
-        "value": 65919
-      },
-      "scriptsig": "",
-      "scriptsig_asm": "",
-      "witness": [
-        "4dffde1251cd90f4afd0dd614b7622642fb598876a080bcfd89d9d51af955ae09a1ab95e14435a3d708a83ecc3e5db04366d67cd4d7e9c1904d4fbbf4f72df13"
-      ],
-      "is_coinbase": false,
-      "sequence": 4294967293
+      "sequence": 4294967295
     }
   ],
   "vout": [
     {
-      "scriptpubkey": "00145f35a124069683ddeb2f1726e9a1173f9340c87e",
-      "scriptpubkey_asm": "OP_0 OP_PUSHBYTES_20 5f35a124069683ddeb2f1726e9a1173f9340c87e",
+      "scriptpubkey": "0014a40897ac0756778584e7dbe457cca54abc6daf4c",
+      "scriptpubkey_asm": "OP_0 OP_PUSHBYTES_20 a40897ac0756778584e7dbe457cca54abc6daf4c",
       "scriptpubkey_type": "v0_p2wpkh",
-      "scriptpubkey_address": "bc1qtu66zfqxj6pam6e0zunwnggh87f5pjr7vdr5cd",
-      "value": 100000
-    },
-    {
-      "scriptpubkey": "0014fb7a185fc47428a9992c09f70c6add47a5c19223",
-      "scriptpubkey_asm": "OP_0 OP_PUSHBYTES_20 fb7a185fc47428a9992c09f70c6add47a5c19223",
-      "scriptpubkey_type": "v0_p2wpkh",
-      "scriptpubkey_address": "bc1qldapsh7yws52nxfvp8msc6kag7jury3rxrw4dm",
-      "value": 30000
-    },
-    {
-      "scriptpubkey": "5120175d515c35577834ad0689fc3c8846283bf4310b7dcbc62fa41089eca7dec029",
-      "scriptpubkey_asm": "OP_PUSHNUM_1 OP_PUSHBYTES_32 175d515c35577834ad0689fc3c8846283bf4310b7dcbc62fa41089eca7dec029",
-      "scriptpubkey_type": "v1_p2tr",
-      "scriptpubkey_address": "bc1pzaw4zhp42aurftgx387rezzx9qalgvgt0h9uvtayzzy7ef77cq5s69sjt9",
-      "value": 22622
+      "scriptpubkey_address": "bc1q5syf0tq82emctp88m0j90n99f27xmt6v2f79lx",
+      "value": 294
     }
-  ]
+  ],
+  "size": 200,
+  "weight": 446,
+  "fee": 1417,
+  "status": {
+    "confirmed": true,
+    "block_height": 834460,
+    "block_hash": "00000000000000000000484a79b643b2524bbce82e5d8a442013fa5b8905ed98",
+    "block_time": 1710307468
+  },
+  "hex": "02000000000101089b880a05785e68950ef8be0952eee5df8b95fdb3a496bd0b32b463cf2ce7fd0900000000ffffffff012601000000000000160014a40897ac0756778584e7dbe457cca54abc6daf4c0301024e750063036f726401010a746578742f706c61696e00367b2270223a226272632d3230222c226f70223a226d696e74222c227469636b223a2261616161222c22616d74223a223130303030227d685121c1782891272861d4104f524ac31855e20aa1bdb507ac4a6619c030768496b90e8400000000"
 }
 '''
 
-#print(gen_pre_hash_raw_tx(json.loads(json_tx)))
+# print(gen_pre_hash_raw_wtx(json.loads(json_tx)))
 
 def gen_tx_id(tx):
     pre_hash_raw_tx = gen_pre_hash_raw_tx(tx)
@@ -267,3 +274,9 @@ def target_to_bits(target):
         coefficient = raw_bytes[:3]  # <4>
     new_bits = coefficient[::-1] + bytes([exponent])  # <5>
     return new_bits
+
+
+def calculateWitnessCommitment(wtxids):
+   witnessRoot = generateMerkleRoot(wtxids)
+   witnessReservedValue = WITNESS_RESERVED_VALUE
+   return hash256(bytes.fromhex(witnessRoot + witnessReservedValue))
