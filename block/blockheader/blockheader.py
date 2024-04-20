@@ -35,7 +35,7 @@ class BlockHeader:
             lower = int(self.blockHash, 16)           
              
             self.nonce += 1
-            print(f"Mining Started {self.nonce}", end="\r")
+            # print(f"Mining Started {self.nonce}", end="\r")
         self.serialize = hash_in
         self.bits = self.bits.hex()
 

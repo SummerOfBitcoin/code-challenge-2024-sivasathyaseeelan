@@ -126,7 +126,7 @@ def read_txs(directory):
                 tx = json.load(file)
                 entry = mempool_entry(tx)
                 if isvalid_tx(tx, entry[0]):
-                    mempool.append(mempool_entry(tx))
+                    mempool.append(entry)
                     valid_tx = valid_tx + 1
                     # print(f"{entry[0]} is Verified")
                 else:
@@ -143,18 +143,18 @@ if __name__ == "__main__":
 
     # Call the function to read JSON files
     valid_tx = read_txs(directory_path)
-    print(len(mempool))
+    # print(len(mempool))
 
 
     left_wt, total_fee = addBlock(0, ZERO_HASH)
 
 
-    print("Total verified txs:", valid_tx)
-    print("Weight and Total fee:", MAX_WEIGHT - left_wt, total_fee)
+    # print("Total verified txs:", valid_tx)
+    # print("Weight and Total fee:", MAX_WEIGHT - left_wt, total_fee)
 
     end_time = time.time()
     execution_time = end_time - start_time
 
-    print("Execution time:", execution_time, "seconds")
+    # print("Execution time:", execution_time, "seconds")
 
 
