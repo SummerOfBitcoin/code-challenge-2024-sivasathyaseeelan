@@ -2,7 +2,7 @@
 
 ## Block Formation from Mempool Transactions
 
-This Python script is designed to create a block of transactions from a mempool of transactions stored in JSON files. It utilizes various modules and algorithms to construct a valid block according to the rules of a blockchain network.
+This Python script(`main.py`) is designed to create a block of transactions from a mempool of transactions stored in JSON files. It utilizes various modules and algorithms to construct a valid block according to the rules of a blockchain network.
 
 ## Overview
 
@@ -24,9 +24,6 @@ The script performs the following main tasks:
 
 The script requires the following dependencies:
 
-- `os`: Operating system interface for file operations.
-- `json`: Library for JSON data serialization and deserialization.
-- `time`: Module for accessing system time and measuring execution time.
 - `utils`: Custom utilities for hash calculations, Merkle tree generation, and other blockchain-related functions.
 - `validate`: Module for transaction validation.
 - `blockheader`: Module for constructing and serializing block headers.
