@@ -46,3 +46,7 @@ The script requires the following dependencies:
 - `VERSION`: Version number of the block.
 - `INITIAL_TARGET`: Initial target difficulty for mining.
 - `WTXID_COINBASE`: Witness transaction ID for the coinbase transaction.
+
+### Results and Performance
+
+![score](./assets/score.png)
